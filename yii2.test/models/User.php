@@ -2,38 +2,48 @@
 
 namespace app\models;
 
-class User extends \yii\base\Object implements \yii\web\IdentityInterface
+use yii\behaviors\TimestampBehavior;
+
+class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
-    public $id;
-    public $username;
-    public $password;
-    public $authKey;
-    public $accessToken;
+    const STATUS_ACTIVE = 1;
+    const STATUS_INACTIVE = 2;
+    const STATUS_NOT_VERIFED = 3;
 
-    private static $users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            'password' => 'admin',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            'password' => 'demo',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
+    /**
+     * @inheritdoc
+     */
+    public static function tableName()
+    {
+        return 'user';
+    }
 
+    public function behaviors()
+    {
+        return [
+            'class' => TimestampBehavior::className(),
+        ];
+    }
+
+    public function rules()
+    {
+        return [
+            [['username', 'email', 'password', 'authKey', 'accessToken'], 'required'],
+            [['username', 'email', 'password', 'authKey', 'accessToken'], 'string'],
+            [['username', 'email', 'password', 'authKey'], 'string', 'max' => 32],
+            [['accessToken'], 'string', 'max' => 64],
+            [['status', 'created_at', 'updated_at'], 'integer'],
+            ['status', 'default', 'value' => self::STATUS_ACTIVE],
+            ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_INACTIVE, self::STATUS_NOT_VERIFED]],
+        ];
+    }
 
     /**
      * @inheritdoc
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return User::findOne($id);
     }
 
     /**
@@ -41,13 +51,7 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return User::findOne(['accessToken' => $token]);
     }
 
     /**
@@ -58,13 +62,7 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
      */
     public static function findByUsername($username)
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return User::findOne(['username' => $username]);
     }
 
     /**
@@ -91,14 +89,13 @@ class User extends \yii\base\Object implements \yii\web\IdentityInterface
         return $this->authKey === $authKey;
     }
 
-    /**
-     * Validates password
-     *
-     * @param string $password password to validate
-     * @return bool if password provided is valid for current user
-     */
-    public function validatePassword($password)
+    public static function findByEmail($email)
     {
-        return $this->password === $password;
+        return User::findOne(['email' => $email]);
+    }
+
+    public static function findIdentityByAuthKey($code)
+    {
+        return User::findOne(['authKey' => $code]);
     }
 }

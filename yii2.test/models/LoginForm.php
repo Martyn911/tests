@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\base\Exception;
 use yii\base\Model;
 
 /**
@@ -11,46 +12,17 @@ use yii\base\Model;
  * @property User|null $user This property is read-only.
  *
  */
-class LoginForm extends Model
+class LoginForm extends User
 {
-    public $username;
-    public $password;
-    public $rememberMe = true;
-
-    private $_user = false;
-
-
     /**
      * @return array the validation rules.
      */
     public function rules()
     {
         return [
-            // username and password are both required
-            [['username', 'password'], 'required'],
-            // rememberMe must be a boolean value
-            ['rememberMe', 'boolean'],
-            // password is validated by validatePassword()
-            ['password', 'validatePassword'],
+            [['email'], 'required'],
+            [['email'], 'email']
         ];
-    }
-
-    /**
-     * Validates the password.
-     * This method serves as the inline validation for password.
-     *
-     * @param string $attribute the attribute currently being validated
-     * @param array $params the additional name-value pairs given in the rule
-     */
-    public function validatePassword($attribute, $params)
-    {
-        if (!$this->hasErrors()) {
-            $user = $this->getUser();
-
-            if (!$user || !$user->validatePassword($this->password)) {
-                $this->addError($attribute, 'Incorrect username or password.');
-            }
-        }
     }
 
     /**
@@ -60,22 +32,56 @@ class LoginForm extends Model
     public function login()
     {
         if ($this->validate()) {
-            return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 3600*24*30 : 0);
+            $user = $this->getUser();
+            if($user){
+                return Yii::$app->user->login($user);
+            }
         }
         return false;
     }
 
     /**
-     * Finds user by [[username]]
+     * Finds user by [[email]]
      *
      * @return User|null
      */
     public function getUser()
     {
-        if ($this->_user === false) {
-            $this->_user = User::findByUsername($this->username);
-        }
+        $user = User::findByEmail($this->email);
 
-        return $this->_user;
+        if($user === null){
+            $verify_token = Yii::$app->security->generateRandomString(32);
+            $user = new User();
+            $user->username = $this->email;
+            $user->password = md5(Yii::$app->security->generateRandomString(10) . $verify_token);
+            $user->email = $this->email;
+            $user->authKey = $verify_token;
+            $user->accessToken = Yii::$app->security->generateRandomString(64);
+            $user->status = User::STATUS_NOT_VERIFED;
+            $user->save();
+
+            if($this->sendVeriryMail($this->email, $verify_token)){
+                Yii::$app->session->setFlash('verifyCodeSend');
+                return false;
+            } else {
+                throw new Exception('Ошибка при отправке письма');
+            }
+        }
+        return $user;
+    }
+
+    public function sendVeriryMail($email, $token)
+    {
+        if ($this->validate()) {
+            Yii::$app->mailer->compose()
+                ->setTo($email)
+                ->setFrom([Yii::$app->params['adminEmail']])
+                ->setSubject('Верификация учетной записи')
+                ->setTextBody('Для верификации учетной записи перейдите, пожалуйста, по ссылке ' . Yii::$app->urlManager->createAbsoluteUrl(['/site/verify-user', 'code' => $token]))
+                ->send();
+
+            return true;
+        }
+        return false;
     }
 }

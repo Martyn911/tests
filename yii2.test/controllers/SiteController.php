@@ -3,6 +3,8 @@
 namespace app\controllers;
 
 use Yii;
+use app\models\User;
+use yii\base\Exception;
 use yii\filters\AccessControl;
 use yii\web\Controller;
 use yii\web\Response;
@@ -82,6 +84,18 @@ class SiteController extends Controller
         return $this->render('login', [
             'model' => $model,
         ]);
+    }
+
+    public function actionVerifyUser($code){
+        $user= User::findIdentityByAuthKey($code);
+        if(!$user){
+            throw new Exception('Code not found');
+        }
+        $user->status = User::STATUS_ACTIVE;
+        $user->save();
+
+        Yii::$app->user->login($user);
+        $this->redirect(['/profile']);
     }
 
     /**
