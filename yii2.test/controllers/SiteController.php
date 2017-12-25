@@ -79,7 +79,7 @@ class SiteController extends Controller
 
         $model = new LoginForm();
         if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
+            return $this->redirect(['/site/profile']);
         }
         return $this->render('login', [
             'model' => $model,
@@ -95,7 +95,7 @@ class SiteController extends Controller
         $user->save();
 
         Yii::$app->user->login($user);
-        $this->redirect(['/profile']);
+        return $this->redirect(['/site/profile']);
     }
 
     /**
@@ -136,5 +136,20 @@ class SiteController extends Controller
     public function actionAbout()
     {
         return $this->render('about');
+    }
+
+    public function actionProfile(){
+        if(Yii::$app->user->isGuest){
+            return $this->redirect(['login']);
+        }
+
+        $model = User::findOne(Yii::$app->user->identity->id);
+
+        if($model->load(Yii::$app->request->post()) && $model->save()){
+            Yii::$app->session->setFlash('usernameModifed');
+        }
+        return $this->render('profile', [
+            'model' => $model,
+        ]);
     }
 }
