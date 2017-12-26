@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\behaviors\TimestampBehavior;
 
 /**
  * This is the model class for table "nginx_logs".
@@ -32,10 +33,20 @@ class NginxLogs extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
+    public function behaviors()
+    {
+        return [
+            TimestampBehavior::className(),
+        ];
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function rules()
     {
         return [
-            [['ip', 'file', 'time', 'request', 'status', 'sentBytes', 'created_at', 'updated_at'], 'required'],
+            [['ip', 'file', 'time', 'request', 'status', 'sentBytes'], 'required'],
             [['time', 'status', 'sentBytes', 'created_at', 'updated_at'], 'integer'],
             [['ip', 'file', 'request', 'referer', 'user_agent'], 'string', 'max' => 255],
         ];
