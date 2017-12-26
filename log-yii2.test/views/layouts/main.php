@@ -47,6 +47,7 @@ AppAsset::register($this);
         $items['items'][] = ['label' => 'Login', 'url' => ['/user/login']];
         $items['items'][] = ['label' => 'Register', 'url' => ['/user/signup']];
     } else {
+        $items['items'][] = ['label' => 'Nginx Logs', 'url' => ['/nginx-logs/index']];
         $items['items'][] = '<li>'
             . Html::beginForm(['/user/logout'], 'post')
             . Html::submitButton(

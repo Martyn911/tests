@@ -32,6 +32,17 @@ $config = [
             'migrationPath' => 'migrations',
             'migrationTable' => '{{%migrations}}'
         ],
+        'logparser' => [
+            'class' => 'app\console\controllers\LogParserController',
+            'logs_dir' => '/data/wwwlogs/',
+            'only_mask' => [
+                '*_access.log',
+                '*-access.log',
+            ],
+            'except_mask' => [
+                'test.site_access.log'
+            ]
+        ],
     ],
 ];
 
