@@ -6,20 +6,37 @@ use Yii;
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use app\models\NginxLogs;
+use kartik\daterange\DateRangeBehavior;
 
 /**
  * NginxLogsSearch represents the model behind the search form of `app\models\NginxLogs`.
  */
 class NginxLogsSearch extends NginxLogs
 {
+    public $createTimeStart;
+    public $createTimeEnd;
+
+    public function behaviors()
+    {
+        return [
+            [
+                'class' => DateRangeBehavior::className(),
+                'attribute' => 'time',
+                'dateStartAttribute' => 'createTimeStart',
+                'dateEndAttribute' => 'createTimeEnd',
+            ]
+        ];
+    }
+
     /**
      * @inheritdoc
      */
     public function rules()
     {
         return [
-            [['id', 'time', 'status', 'sentBytes', 'created_at', 'updated_at'], 'integer'],
+            [['id', 'status', 'sentBytes', 'created_at', 'updated_at'], 'integer'],
             [['ip', 'file', 'request', 'referer', 'user_agent'], 'safe'],
+            [['time'], 'match', 'pattern' => '/^.+\s\-\s.+$/'],
         ];
     }
 
@@ -47,6 +64,11 @@ class NginxLogsSearch extends NginxLogs
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
+            'sort' => [
+                'defaultOrder' => [
+                    'time' => SORT_DESC,
+                ]
+            ],
         ]);
 
         $this->load($params);
@@ -60,18 +82,20 @@ class NginxLogsSearch extends NginxLogs
         // grid filtering conditions
         $query->andFilterWhere([
             'id' => $this->id,
-            'time' => $this->time,
-            'status' => $this->status,
-            'sentBytes' => $this->sentBytes,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ]);
 
+        $query->orFilterWhere(['status' => $this->request])
+            ->orFilterWhere(['sentBytes' => $this->request])
+            ->orFilterWhere(['like', 'request', $this->request])
+            ->orFilterWhere(['like', 'referer', $this->request])
+            ->orFilterWhere(['like', 'user_agent', $this->request]);
+
         $query->andFilterWhere(['like', 'ip', $this->ip])
             ->andFilterWhere(['like', 'file', $this->file])
-            ->andFilterWhere(['like', 'request', $this->request])
-            ->andFilterWhere(['like', 'referer', $this->referer])
-            ->andFilterWhere(['like', 'user_agent', $this->user_agent]);
+            ->andFilterWhere(['>=', 'time', $this->createTimeStart])
+            ->andFilterWhere(['<', 'time', $this->createTimeEnd]);
 
         return $dataProvider;
     }

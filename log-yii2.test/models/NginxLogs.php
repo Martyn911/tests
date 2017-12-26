@@ -71,4 +71,20 @@ class NginxLogs extends \yii\db\ActiveRecord
             'updated_at' => 'Updated At',
         ];
     }
+
+    public static function getLogFiles(){
+        $files = Yii::$app->cache->get('all_log_files');
+        if(!$files){
+            $files = NginxLogs::find()
+                ->groupBy('file')
+                ->select('file')
+                ->column();
+            $files = array_map(function($item){
+                return basename($item);
+            }, $files);
+            $files = array_combine($files, $files);
+            Yii::$app->cache->set('all_log_files', $files , 300);
+        }
+        return $files;
+    }
 }

@@ -86,9 +86,10 @@ Class UserController extends Controller {
         $model = new SignupForm();
         if ($model->load(Yii::$app->request->post())) {
             if ($user = $model->signup()) {
-                if (Yii::$app->getUser()->login($user)) {
+                Yii::$app->session->setFlash('success', 'Учетная запись будет проверена и активарована администратором.');
+                //if (Yii::$app->getUser()->login($user)) {
                     return $this->goHome();
-                }
+                //}
             }
         }
         return $this->render('signup', [

@@ -14,23 +14,53 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <h1><?= Html::encode($this->title) ?></h1>
     <?php Pjax::begin(); ?>
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
-    <p>
-        <?= Html::a(Yii::t('app', 'Create Nginx Logs'), ['create'], ['class' => 'btn btn-success']) ?>
-    </p>
+    <?php //echo $this->render('_search', ['model' => $searchModel]); ?>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
+        'options' => [
+            'style' => 'font-size:12px;'
+        ],
         'columns' => [
-            ['class' => 'yii\grid\SerialColumn'],
-
-            'id',
+            [
+                'attribute' => 'time',
+                'value' => function($data){
+                    return date('d.m.Y H:i:s', $data->time);
+                },
+                'filter' => \kartik\daterange\DateRangePicker::widget([
+                    'model' => $searchModel,
+                    'attribute' => 'time',
+                    'convertFormat' => true,
+                    'pluginOptions' => [
+                        'timePicker' => true,
+                        'timePickerIncrement' => 5,
+                        'locale' => [
+                            'format' => 'Y-m-d h:i A'
+                        ]
+                    ]
+                ]),
+            ],
             'ip',
-            'file',
-            'time:datetime',
-            'request',
+            [
+              'attribute' => 'file',
+                'value' => function($data){
+                    return basename($data->file);
+                },
+                'filter' => \app\models\NginxLogs::getLogFiles()
+            ],
+            [
+                'attribute' => 'request',
+                'value' => function($data){
+                    return $data->request . ' '
+                    . $data->status.' '
+                    . $data->sentBytes . ' "'
+                    . $data->referer . '" "'
+                    . $data->user_agent . '"';
+                }
+            ],
+
+            //'request',
             //'status',
             //'sentBytes',
             //'referer',
@@ -38,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
             //'created_at',
             //'updated_at',
 
-            ['class' => 'yii\grid\ActionColumn'],
+            //['class' => 'yii\grid\ActionColumn'],
         ],
     ]); ?>
     <?php Pjax::end(); ?>
