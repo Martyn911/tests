@@ -34,7 +34,7 @@ $config = [
         ],
         'logparser' => [
             'class' => 'app\console\controllers\LogParserController',
-            'logs_dir' => '/data/wwwlogs/',
+            'logs_dir' => getenv('LOG_DIR'),
             'only_mask' => [
                 '*_access.log',
                 '*-access.log',

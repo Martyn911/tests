@@ -11,7 +11,7 @@ use app\models\search\NginxLogsSearch;
 Class ApiController extends ActiveController
 {
     public $modelClass = 'app\models\NginxLogs';
-    public $reservedParams = ['sort', 'limit'];
+    public $reservedParams = ['sort'];
     public $extendParams = ['etime', 'stime'];
 
     /*
