@@ -146,7 +146,9 @@ Class KnuckleLog
         $entry = [];
         if(count($result) && !empty($result[0]) ) {
             foreach ($result as $line) {
-                $entry[] = $this->parse($line);
+                if(!empty(trim($line))){
+                    $entry[] = $this->parse($line);
+                }
             }
         }
         return ['data' => $entry ?: null, 'totalLines' => $this->getLines() ?: null];

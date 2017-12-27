@@ -49,7 +49,7 @@ Class LogParserController extends Controller {
 
     public function getLogFiles(){
         if(!file_exists($this->logs_dir)){
-            throw new Exception('Директория с файлами логов не найдена. Проверьте параметр logs_dir');
+            throw new Exception('Директория с файлами логов не найдена или запрещен доступ настройкой open_basedir. Проверьте параметр logs_dir');
         }
         return FileHelper::findFiles($this->logs_dir, [
             'only' => $this->only_mask,
