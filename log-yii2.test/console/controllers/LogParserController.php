@@ -34,7 +34,6 @@ Class LogParserController extends Controller {
             $limit = 10;
             do {
                 $data = new KnuckleLog($log_file, $this->format, $offset, $limit);
-                //$data = new KnuckleLog('/data/wwwlogs/muzlan.ru_access.log', $this->format, $offset, $limit);
                 $array = $data->worker();
                 if(count($array['data'])){
                     $this->saveToDb($log_file, $array['data']);
@@ -43,10 +42,6 @@ Class LogParserController extends Controller {
                 if($array['totalLines'] < $limit){
                     $limit = $array['totalLines'];
                 }
-
-                echo $offset . "\n";
-                echo $limit . "\n";
-                echo $array['totalLines'] . "\n";
 
             } while(isset($array['totalLines']) && $array['totalLines']);
         }
