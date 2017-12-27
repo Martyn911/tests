@@ -13,8 +13,8 @@ use kartik\daterange\DateRangeBehavior;
  */
 class NginxLogsSearch extends NginxLogs
 {
-    public $createTimeStart;
-    public $createTimeEnd;
+    public $stime;
+    public $etime;
 
     public function behaviors()
     {
@@ -22,8 +22,8 @@ class NginxLogsSearch extends NginxLogs
             [
                 'class' => DateRangeBehavior::className(),
                 'attribute' => 'time',
-                'dateStartAttribute' => 'createTimeStart',
-                'dateEndAttribute' => 'createTimeEnd',
+                'dateStartAttribute' => 'stime',
+                'dateEndAttribute' => 'etime',
             ]
         ];
     }
@@ -34,7 +34,7 @@ class NginxLogsSearch extends NginxLogs
     public function rules()
     {
         return [
-            [['id', 'status', 'sentBytes', 'created_at', 'updated_at'], 'integer'],
+            [['id', 'status', 'sentBytes', 'created_at', 'updated_at', 'stime', 'etime'], 'integer'],
             [['ip', 'file', 'request', 'referer', 'user_agent'], 'safe'],
             [['time'], 'match', 'pattern' => '/^.+\s\-\s.+$/'],
         ];
@@ -94,8 +94,8 @@ class NginxLogsSearch extends NginxLogs
 
         $query->andFilterWhere(['like', 'ip', $this->ip])
             ->andFilterWhere(['like', 'file', $this->file])
-            ->andFilterWhere(['>=', 'time', $this->createTimeStart])
-            ->andFilterWhere(['<', 'time', $this->createTimeEnd]);
+            ->andFilterWhere(['>=', 'time', $this->stime])
+            ->andFilterWhere(['<', 'time', $this->etime]);
 
         return $dataProvider;
     }
